@@ -1,0 +1,37 @@
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+
+<head profile="http://gmpg.org/xfn/11">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Ship generator</title>
+
+    <link type="text/css" href="src/main.css" rel="stylesheet">
+
+    <script
+            type="text/javascript"
+            src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+            integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
+            crossorigin="anonymous">
+    </script>
+
+    <script type="text/javascript" src="src/threejs.js"></script>
+
+    <script type="text/javascript" src="./src/ship-parts.js"></script>
+
+    <script type="text/javascript" src="./src/main.js"></script>
+</head>
+
+<body>
+<div id="container">
+    <a id="wrldownload">DOWNLOAD</a>
+    <div style="display: inline-flex;align-items: center;gap: 5px;"><span>Seed: </span>
+        <p id="seed"></p></div>
+    <button id="generate-next">Next</button>
+</div>
+
+<div id="canvas"></div>
+</body>
+
+</html>
