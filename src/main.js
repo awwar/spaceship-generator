@@ -21,16 +21,14 @@ let newConnectors = [];
 
 let grey = 0x383838;
 let white = 0xEEEEEE;
-let black = 0x000000;
 
-let facemat = new Threejs.MeshBasicMaterial({color: white, opacity: 1.0, shading: Threejs.FlatShading});
-let wiremat = new Threejs.MeshBasicMaterial({color: grey, opacity: 1.0, wireframe: true, wireframeLinewidth: 1.0});
-
-let Material = [facemat, wiremat];
+let wiremat = new THREE.MeshBasicMaterial({color: grey, opacity: 1.0, wireframe: true, wireframeLinewidth: 1.0});
 
 let partRand = new Rc4Random('' + hash_name);
 
 let shipPartsCtx = {};
+
+const SHOW_CONNECTORS = false;
 
 let wrlGenerator = (namedata, pointdata, facedata) => {
     return `#VRML V2.0 utf8
@@ -76,7 +74,7 @@ $(document).ready(function () {
 
     try {
         // create a WebGL renderer
-        renderer = new Threejs.WebGLRenderer({antialias: true});
+        renderer = new THREE.WebGLRenderer({antialias: true});
 
         renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -88,7 +86,7 @@ $(document).ready(function () {
         alert("Your browser doesn\'t support WebGL");
     }
 
-    camera = new Threejs.TrackballCamera({
+    camera = new THREE.TrackballCamera({
 
         fov: 35,
         aspect: SCREEN_WIDTH / SCREEN_HEIGHT,
@@ -114,16 +112,15 @@ $(document).ready(function () {
     camera.position.y = 250;
     camera.position.z = -1000;
 
-    camParent = new Threejs.Object3D();
+    camParent = new THREE.Object3D();
 
     camParent.addChild(camera);
-    modelParent = new Threejs.Object3D();
+    modelParent = new THREE.Object3D();
     modelParent.rotation.x = -(pi * 0.5);
     modelParent.position.y = -50;
 
     // Create the scene
-    scene = new Threejs.Scene();
-    // scene.fog = new Threejs.Fog(black, (sceneHalf - 300), sceneHalf);
+    scene = new THREE.Scene();
 
     scene.addObject(modelParent);
 
@@ -153,10 +150,10 @@ function newModel() {
 
     partLimit += Math.round(partRand.getRandomNumber() * partVar)
 
-    let basePart = new Threejs.Mesh(new Ship('hull', shipPartsCtx), Material);
+    let basePart = CreateShipMesh('hull', shipPartsCtx);
     basePart.doubleSided = false;
     basePart.useQuaternion = true;
-    basePart.offset = new Threejs.Vector3(0.0, 0.0, 1.0);
+    basePart.offset = new THREE.Vector3(0.0, 0.0, 1.0);
     basePart.birthTime = new Date().getTime();
 
     modelParent.addChild(basePart);
@@ -197,10 +194,10 @@ function addPart(depth, cPick, pPick) {
     // Make a part
     let part;
     if (pPick === undefined) {
-        part = new Threejs.Mesh(new Ship('part', shipPartsCtx), Material);
+        part = CreateShipMesh('part', shipPartsCtx);
         pPick = part.geometry.part.id;
     } else {
-        part = new Threejs.Mesh(new Ship('part', shipPartsCtx, pPick), Material);
+        part = CreateShipMesh('part', shipPartsCtx, pPick);
     }
 
     part.birthTime = new Date().getTime();
@@ -211,7 +208,7 @@ function addPart(depth, cPick, pPick) {
     Models.push(part);
     activeParts.push(part);
 
-    let d = new Threejs.Quaternion();
+    let d = new THREE.Quaternion();
     d.copy(connection.quaternion);
 
     part.quaternion.copy(d);
@@ -219,10 +216,10 @@ function addPart(depth, cPick, pPick) {
 
     part.update();
 
-    part.target = new Threejs.Vector3();
+    part.target = new THREE.Vector3();
     part.target.copy(part.position);
 
-    part.offset = new Threejs.Vector3(0.0, 0.0, 1.0);
+    part.offset = new THREE.Vector3(0.0, 0.0, 1.0);
     part.offset = d.multiplyVector3(part.offset); // part.matrix.multiplyVector3(part.offset);
     part.offset.setLength(partOffset);
     part.position.addSelf(part.offset);
@@ -236,8 +233,8 @@ function addPart(depth, cPick, pPick) {
     // See if there's another connector mirroring this one
     let cLen = Connectors.length
     if (cLen) {
-        let cV = new Threejs.Vector3();
-        let cC = new Threejs.Vector3();
+        let cV = new THREE.Vector3();
+        let cC = new THREE.Vector3();
 
         cV.copy(connection.position);
         //cy = rounder(connection.position.y)
@@ -270,15 +267,15 @@ function addConnections(part) {
 
             let c = con[g];
 
-            let n = new Threejs.Object3D();
+            let n = new THREE.Object3D();
             n.name = c.name;
-            n.position = new Threejs.Vector3(c.position[0], c.position[1], c.position[2]);
-            n.quaternion = new Threejs.Quaternion(c.quaternion[0], c.quaternion[1], c.quaternion[2], c.quaternion[3]);
+            n.position = new THREE.Vector3(c.position[0], c.position[1], c.position[2]);
+            n.quaternion = new THREE.Quaternion(c.quaternion[0], c.quaternion[1], c.quaternion[2], c.quaternion[3]);
             //n.quaternion.copy(c.quaternion);
             n.useQuaternion = true;
             n.update();
 
-            let m = new Threejs.Matrix4();
+            let m = new THREE.Matrix4();
             m.multiply(mat, n.matrix);
 
             n.position = m.getPosition();
@@ -340,6 +337,7 @@ function getModelData() {
     let faceList = '';
     let offset = 0;
 
+    let p;
     for (let m = 0; m < Models.length; m++) {
 
         // Lets get all the coordinates for the points in a neat string
@@ -473,6 +471,9 @@ function degrees(nr) {
     return nr * (180 / pi);
 }
 
+const stringToInt = (str) => str.split('').reduce((prevHash, currVal) =>
+    (((prevHash << 5) - prevHash) + currVal.charCodeAt(0)) | 0, 0);
+
 function Rc4Random(seed) {
     let keySchedule = [];
     let keySchedule_i = 0;
@@ -516,14 +517,14 @@ function Rc4Random(seed) {
     }
 }
 
-let Ship = function (type, partsCtx, pick) {
-    let scope = this;
+let CreateShipMesh = function (type, partsCtx, pick) {
+    let geometry = new THREE.Geometry();
 
-    scope.scale = 10;
+    geometry.scale = 10;
 
-    scope.settings = [];
+    geometry.settings = [];
 
-    Threejs.Geometry.call(this);
+    THREE.Geometry.call(this);
 
     let items;
 
@@ -534,19 +535,21 @@ let Ship = function (type, partsCtx, pick) {
     }
 
     if (pick === undefined) {
-        scope.pick = Math.round(partRand.getRandomNumber() * (items.length - 1));
+        geometry.pick = Math.round(partRand.getRandomNumber() * (items.length - 1));
     } else {
-        scope.pick = pick;
+        geometry.pick = pick;
     }
 
-    scope.part = items[scope.pick];
+    const part = items[geometry.pick];
 
-    for (let i = 0; i < scope.part.vertices.length; i++) {
-        v(scope.part.vertices[i]);
+    geometry.part = part;
+
+    for (let i = 0; i < geometry.part.vertices.length; i++) {
+        v(geometry.part.vertices[i]);
     }
 
-    for (let i = 0; i < scope.part.faces.length; i++) {
-        let face = scope.part.faces[i];
+    for (let i = 0; i < geometry.part.faces.length; i++) {
+        let face = geometry.part.faces[i];
         if (face.length === 4) {
             f4(face);
         } else {
@@ -554,22 +557,38 @@ let Ship = function (type, partsCtx, pick) {
         }
     }
 
-    this.computeCentroids();
-    this.computeFaceNormals();
+    geometry.computeCentroids();
+    geometry.computeFaceNormals();
 
     function v(co) {
-        scope.vertices.push(new Threejs.Vertex(new Threejs.Vector3(co[0], co[1], co[2])));
+        geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(co[0], co[1], co[2])));
     }
 
     function f3(v) {
-        scope.faces.push(new Threejs.Face3(v[0], v[1], v[2]));
+        geometry.faces.push(new THREE.Face3(v[0], v[1], v[2]));
     }
 
     function f4(v) {
-        scope.faces.push(new Threejs.Face4(v[0], v[1], v[2], v[3]));
+        geometry.faces.push(new THREE.Face4(v[0], v[1], v[2], v[3]));
     }
 
-};
+    let number = stringToInt(part.name);
 
-Ship.prototype = new Threejs.Geometry();
-Ship.prototype.constructor = Ship;
+    let facemat = new THREE.MeshBasicMaterial({color: number * 0xffffff, opacity: 1.0, shading: THREE.FlatShading});
+
+    const mesh = new THREE.Mesh(geometry, [facemat, wiremat]);
+
+    if (SHOW_CONNECTORS) {
+        for (let connector of part.connectors) {
+            let marker_geo = new THREE.SphereGeometry(7, 7, 7);
+            let marker_mat = new THREE.MeshBasicMaterial({color: 0x575757, opacity: 1.0, shading: THREE.FlatShading});
+            let marker = new THREE.Mesh(marker_geo, marker_mat);
+            marker.name = 'marker';
+            marker.position = new THREE.Vector3(connector.position[0], connector.position[1], connector.position[2]);
+
+            mesh.children.push(marker)
+        }
+    }
+
+    return mesh;
+};
