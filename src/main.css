@@ -1,0 +1,49 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: #575757;
+    text-align: center;
+}
+
+body {
+    text-align: center;
+    overflow: hidden;
+}
+
+#canvas {
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+
+body,
+td,
+form,
+a {
+    font-family: Arial, Helvetica, serif;
+    font-size: x-small;
+    color: #F0F0F0;
+    font-weight: normal;
+}
+
+a {
+    text-decoration: none;
+}
+
+#footer a:hover {
+    color: #FFF;
+}
+
+#wrldownload {
+    color: #00af04 !important;
+}
+
+#wrldownload:hover {
+    color: #FFF !important;
+}
+
+#wrldownload {
+    padding: 10px;
+    color: #FFF;
+}
